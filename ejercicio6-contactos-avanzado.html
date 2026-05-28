@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ejercicio 6 — API de Contactos Avanzada · Node.js · Jest</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  <style>
+    :root {
+      --node-color: #68A063;
+      --node-dark: #3E7B39;
+      --node-light: #EDF6EC;
+      --sidebar-bg: #1a1d23;
+      --sidebar-text: #c9d1d9;
+      --sidebar-accent: #58a6ff;
+      --body-bg: #f6f8fa;
+      --card-bg: #ffffff;
+      --text-main: #24292f;
+      --text-muted: #57606a;
+      --border: #d0d7de;
+      --exercise-bg: #fffbf0;
+      --exercise-border: #f0a500;
+      --tip-bg: #dff0ff;
+      --tip-border: #0969da;
+      --example-bg: #f0fff4;
+      --example-border: #2da44e;
+      --warning-bg: #fff8c5;
+      --warning-border: #d4a017;
+      --upgrade-bg: #f5f0ff;
+      --upgrade-border: #7c3aed;
+      --why-bg: #fef2f2;
+      --why-border: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--body-bg);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 0 0 2rem;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    #sidebar-header {
+      padding: 1.5rem 1.25rem 1rem;
+      border-bottom: 1px solid #30363d;
+      background: #0d1117;
+    }
+
+    #sidebar-header h1 { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.4; }
+    #sidebar-header p  { font-size: 0.72rem; color: #8b949e; margin-top: 0.3rem; }
+
+    .nav-section { padding: 1rem 0 0.5rem; }
+
+    .nav-section-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #8b949e;
+      padding: 0 1.25rem 0.4rem;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 1.25rem;
+      font-size: 0.82rem;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      background: rgba(88,166,255,0.08);
+      color: #fff;
+      border-left-color: var(--sidebar-accent);
+    }
+
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-node   { background: var(--node-color); }
+    .dot-ex     { background: var(--exercise-border); }
+    .dot-base   { background: var(--sidebar-accent); }
+    .dot-ex2    { background: #2da44e; }
+    .dot-purple { background: #7c3aed; }
+    .dot-red    { background: #dc2626; }
+
+    /* ── MAIN ── */
+    #main { flex: 1; padding: 2.5rem 2rem 4rem; max-width: 980px; }
+
+    .page-title    { font-size: 2rem; font-weight: 800; color: #0d1117; margin-bottom: 0.4rem; }
+    .page-subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 2.5rem; }
+
+    .section { margin-bottom: 3.5rem; }
+
+    .section-title {
+      font-size: 1.55rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-node   { background: var(--node-dark); color: #fff; }
+    .badge-purple { background: #7c3aed; color: #fff; }
+    .badge-new    { background: #dc2626; color: #fff; }
+
+    .subsection { margin: 2rem 0; }
+
+    .subsection-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: #0d1117;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    p { color: var(--text-muted); line-height: 1.7; margin-bottom: 0.8rem; }
+
+    /* ── CODE BLOCKS ── */
+    .code-block {
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 1rem 0 1.5rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .code-header-node   { background: #1a2e1a; color: var(--node-color); }
+    .code-header-shell  { background: #1a1a1a; color: #8b949e; }
+    .code-header-purple { background: #1e1040; color: #a78bfa; }
+
+    .code-block pre { margin: 0; }
+    .code-block pre code { font-size: 0.82rem; line-height: 1.6; }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin: 1.2rem 0;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .callout-icon { font-size: 1.1rem; flex-shrink: 0; line-height: 1.6; }
+    .callout-body { flex: 1; }
+    .callout-body strong { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; }
+    .callout-body p { margin: 0; font-size: 0.85rem; }
+
+    .callout-tip     { background: var(--tip-bg);     border-left: 4px solid var(--tip-border); }
+    .callout-warning { background: var(--warning-bg); border-left: 4px solid var(--warning-border); }
+    .callout-example { background: var(--example-bg); border-left: 4px solid var(--example-border); }
+    .callout-upgrade { background: var(--upgrade-bg); border-left: 4px solid var(--upgrade-border); }
+    .callout-why     { background: var(--why-bg);     border-left: 4px solid var(--why-border); }
+
+    /* ── CONCEPT CARDS ── */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .concept-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem;
+    }
+
+    .concept-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; color: #0d1117; }
+    .concept-card p  { font-size: 0.8rem; margin: 0; line-height: 1.5; }
+
+    /* ── EXERCISES ── */
+    .exercise-section {
+      background: var(--exercise-bg);
+      border: 2px dashed var(--exercise-border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin: 2rem 0;
+    }
+
+    .exercise-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .exercise-icon { font-size: 1.5rem; }
+
+    .exercise-title    { font-size: 1.15rem; font-weight: 700; color: #92400e; }
+    .exercise-subtitle { font-size: 0.8rem; color: #b45309; margin-top: 0.1rem; }
+
+    .exercise-body p { color: #57534e; font-size: 0.88rem; }
+
+    .exercise-task {
+      background: var(--card-bg);
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.75rem 0;
+    }
+
+    .exercise-task h5 { font-size: 0.85rem; font-weight: 700; color: #92400e; margin-bottom: 0.4rem; }
+    .exercise-task ul, .exercise-task ol { padding-left: 1.2rem; font-size: 0.83rem; color: #57534e; }
+    .exercise-task li { margin-bottom: 0.3rem; }
+
+    /* ── UPGRADE BOX ── */
+    .upgrade-section {
+      background: var(--upgrade-bg);
+      border: 1px solid var(--upgrade-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .upgrade-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+
+    .upgrade-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #5b21b6;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: #ede9fe;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+    }
+
+    .upgrade-title { font-size: 0.95rem; font-weight: 600; color: #5b21b6; }
+
+    /* ── WHY BOX ── */
+    .why-section {
+      background: var(--why-bg);
+      border: 1px solid var(--why-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .why-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+
+    .why-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #991b1b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: #fee2e2;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+    }
+
+    .why-title { font-size: 0.95rem; font-weight: 600; color: #991b1b; }
+
+    /* ── EXAMPLE BOX ── */
+    .example-section {
+      background: var(--example-bg);
+      border: 1px solid var(--example-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .example-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+
+    .example-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #166534;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: #dcfce7;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+    }
+
+    .example-title { font-size: 0.95rem; font-weight: 600; color: #166534; }
+
+    /* ── HINT TOGGLE ── */
+    .hint-toggle {
+      background: none;
+      border: 1px solid var(--exercise-border);
+      color: #92400e;
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.75rem;
+      transition: all 0.15s;
+    }
+
+    .hint-toggle:hover { background: var(--exercise-border); color: #fff; }
+
+    .hint-body {
+      display: none;
+      background: #fffde7;
+      border-radius: 6px;
+      padding: 0.9rem;
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      color: #57534e;
+    }
+
+    .hint-body ul { padding-left: 1.2rem; }
+    .hint-body li { margin-bottom: 0.3rem; }
+
+    /* ── DIFF BADGE ── */
+    .diff {
+      font-size: 0.65rem;
+      padding: 0.1rem 0.5rem;
+      border-radius: 20px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    .diff-medium { background: #fef3c7; color: #92400e; }
+    .diff-hard   { background: #fee2e2; color: #991b1b; }
+
+    /* ── TABLE ── */
+    .feature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    .feature-table th {
+      background: #0d1117;
+      color: #fff;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-size: 0.82rem;
+    }
+
+    .feature-table td {
+      padding: 0.75rem 1rem;
+      font-size: 0.83rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+      vertical-align: top;
+    }
+
+    .feature-table tr:last-child td { border-bottom: none; }
+
+    .tag {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .tag-new   { background: #dcfce7; color: #166534; }
+    .tag-mod   { background: #fef3c7; color: #92400e; }
+    .tag-keep  { background: #f1f5f9; color: #475569; }
+    .tag-test  { background: #ede9fe; color: #5b21b6; }
+
+    /* ── DIVIDER ── */
+    .section-divider {
+      height: 4px;
+      border-radius: 2px;
+      margin: 0 0 2.5rem;
+      background: linear-gradient(90deg, #7c3aed, #2da44e);
+    }
+
+    /* ── INLINE CODE ── */
+    code:not([class]) {
+      background: #f1f3f4;
+      padding: 0.15em 0.45em;
+      border-radius: 4px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.82em;
+      color: #c7254e;
+    }
+
+    /* ── STEP NUMBERS ── */
+    .step-list { list-style: none; padding: 0; margin: 1rem 0; }
+
+    .step-list li {
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+      margin-bottom: 0.9rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .step-purple { background: #7c3aed; }
+    .step-green  { background: #166534; }
+    .step-red    { background: #dc2626; }
+
+    /* ── SCROLLBAR ── */
+    #sidebar::-webkit-scrollbar { width: 5px; }
+    #sidebar::-webkit-scrollbar-track { background: transparent; }
+    #sidebar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      #sidebar { width: 100%; height: auto; position: static; }
+      #main { padding: 1.5rem 1rem; }
+    }
+
+    .toc-anchor { scroll-margin-top: 1.5rem; }
+
+    /* ── ROUTE PILL ── */
+    .method {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    .method-get    { background: #dbeafe; color: #1d4ed8; }
+    .method-post   { background: #dcfce7; color: #166534; }
+    .method-put    { background: #fef3c7; color: #92400e; }
+    .method-patch  { background: #ede9fe; color: #5b21b6; }
+    .method-delete { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <h1>Ejercicio 6 — Contactos+</h1>
+    <p>Evolución del Ejercicio 5 · API avanzada</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Contexto</div>
+    <a href="#punto-de-partida" class="nav-link"><span class="nav-dot dot-base"></span>Punto de partida (Ej. 5)</a>
+    <a href="#por-que-extender"  class="nav-link"><span class="nav-dot dot-red"></span>¿Por qué extender la API?</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Mejoras propuestas</div>
+    <a href="#mejora-1" class="nav-link"><span class="nav-dot dot-purple"></span>1 · Validación con regex</a>
+    <a href="#mejora-2" class="nav-link"><span class="nav-dot dot-purple"></span>2 · Email duplicado</a>
+    <a href="#mejora-3" class="nav-link"><span class="nav-dot dot-purple"></span>3 · Búsqueda y filtros</a>
+    <a href="#mejora-4" class="nav-link"><span class="nav-dot dot-purple"></span>4 · Favoritos (PATCH)</a>
+    <a href="#mejora-5" class="nav-link"><span class="nav-dot dot-purple"></span>5 · Manejo de errores</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Código de referencia</div>
+    <a href="#api-completa"    class="nav-link"><span class="nav-dot dot-ex2"></span>API extendida (src/app.js)</a>
+    <a href="#resumen-rutas"   class="nav-link"><span class="nav-dot dot-ex2"></span>Tabla de rutas</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Tu ejercicio</div>
+    <a href="#ejercicio-tests" class="nav-link"><span class="nav-dot dot-ex"></span>Escribe los nuevos tests</a>
+    <a href="#por-que-tests"   class="nav-link"><span class="nav-dot dot-red"></span>Por qué importan estos tests</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<main id="main">
+
+  <h1 class="page-title">Ejercicio 6 — API de Contactos Avanzada</h1>
+  <p class="page-subtitle">Evolución del Ejercicio 5 · Nuevas funcionalidades y pruebas unitarias más completas</p>
+
+  <div class="callout callout-upgrade">
+    <span class="callout-icon">🔷</span>
+    <div class="callout-body">
+      <strong>Prerrequisito: Ejercicio 5 completado</strong>
+      <p>Este ejercicio parte del resultado del Ejercicio 5. Si aún no lo has hecho, complétalo primero. Aquí analizaremos sus limitaciones y agregaremos cinco mejoras concretas a la API, que luego deberás cubrir con pruebas unitarias.</p>
+    </div>
+  </div>
+
+  <!-- ─── PUNTO DE PARTIDA ─── -->
+  <section class="section" id="punto-de-partida">
+    <h2 class="section-title toc-anchor">Punto de partida — Ejercicio 5</h2>
+
+    <p>La API del Ejercicio 5 cubre lo mínimo funcional: un CRUD básico sobre un array en memoria. Funciona, pero tiene <strong>cinco huecos importantes</strong> que encontrarás en cualquier API real.</p>
+
+    <div class="concept-grid">
+      <div class="concept-card">
+        <h4>Validación superficial</h4>
+        <p>Solo se verifica que el email contenga <code>@</code>. Un string como <code>"a@b"</code> pasa la validación aunque no sea un email real.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Sin deduplicación</h4>
+        <p>Puedes crear dos contactos con el mismo email. Esto rompería la búsqueda por email y generaría datos duplicados.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Sin búsqueda</h4>
+        <p>No hay forma de filtrar contactos por nombre o email sin obtener toda la lista y filtrar en el cliente.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Sin acciones específicas</h4>
+        <p>No existe forma de marcar un contacto como favorito sin sobreescribir todo el objeto con <code>PUT</code>.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Errores inconsistentes</h4>
+        <p>Cada ruta genera mensajes de error con su propia estructura. No hay un formato uniforme ni un middleware centralizado.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Tests frágiles</h4>
+        <p>Los tests dependen del ID <code>1</code> del array inicial. Si los datos de seed cambian, varios tests rompen en cascada.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── POR QUÉ EXTENDER ─── -->
+  <section class="section" id="por-que-extender">
+    <h2 class="section-title toc-anchor">¿Por qué extender la API?</h2>
+
+    <p>No se trata solo de agregar funcionalidades — se trata de aprender cómo <strong>crecer código existente de forma segura</strong>. Cada mejora introduce un escenario nuevo que los tests deben cubrir.</p>
+
+    <div class="why-section">
+      <div class="why-header">
+        <span class="why-label">Principio clave</span>
+        <span class="why-title">Cada nueva lógica de negocio necesita su propia prueba</span>
+      </div>
+      <p style="color:#7f1d1d; font-size:0.88rem; margin:0 0 0.6rem;">
+        Cuando un sistema crece sin nuevas pruebas, la cobertura se diluye: el porcentaje de líneas de código sin test aumenta con cada commit. Esto acumula "deuda de testing" que luego es muy costosa de pagar.
+      </p>
+      <p style="color:#7f1d1d; font-size:0.88rem; margin:0;">
+        Las pruebas también actúan como documentación viva: cuando alguien nuevo lee <code>it('rechaza emails duplicados con 409')</code>, entiende inmediatamente que esa es una invariante del sistema, sin necesidad de leer el código de producción.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────────────── MEJORAS ─────────────────── -->
+  <div class="section-divider"></div>
+
+  <section class="section">
+    <h2 class="section-title">Las cinco mejoras — paso a paso</h2>
+
+    <p>Primero lee y entiende cada mejora. Al final del documento encontrarás el <strong>código completo de la API extendida</strong> como referencia, y el ejercicio donde tú escribes todos los tests nuevos.</p>
+
+    <!-- ─── MEJORA 1 ─── -->
+    <div class="upgrade-section" id="mejora-1">
+      <div class="upgrade-header">
+        <span class="upgrade-label">Mejora 1</span>
+        <span class="upgrade-title">Validación de email con expresión regular</span>
+      </div>
+
+      <p style="color:#4c1d95; font-size:0.88rem; margin-bottom:1rem;">
+        Reemplazamos <code>email.includes('@')</code> por una regex que verifica el formato mínimo real: caracteres antes del <code>@</code>, un dominio y una extensión. Esto rechaza strings como <code>"@"</code>, <code>"a@b"</code> o <code>"test@"</code>.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header code-header-purple">🔷 Cambio en src/app.js — función validateContact</div>
+        <pre><code class="language-javascript">// ANTES (Ejercicio 5)
+if (!email || !email.includes('@')) {
+  return { valid: false, error: 'Email inválido.' };
+}
+
+// DESPUÉS (Ejercicio 6) — regex de formato básico
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateContact({ name, email }) {
+  if (!name || name.trim() === '') {
+    return { valid: false, error: 'El campo name es requerido.' };
+  }
+  if (!email || !EMAIL_REGEX.test(email)) {
+    return { valid: false, error: 'El formato del email es inválido.' };
+  }
+  return { valid: true };
+}</code></pre>
+      </div>
+
+      <div class="callout callout-tip" style="margin-top:0;">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>Por qué esto importa para los tests</strong>
+          <p>Ahora hay más casos de borde que probar: <code>"@"</code>, <code>"sin-arroba"</code>, <code>"a@b"</code> (sin dominio), <code>"usuario@dominio."</code> (punto al final). Cada caso es un test separado porque representa un camino diferente en la lógica de validación.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MEJORA 2 ─── -->
+    <div class="upgrade-section" id="mejora-2">
+      <div class="upgrade-header">
+        <span class="upgrade-label">Mejora 2</span>
+        <span class="upgrade-title">Detección de email duplicado — 409 Conflict</span>
+      </div>
+
+      <p style="color:#4c1d95; font-size:0.88rem; margin-bottom:1rem;">
+        Antes de crear un contacto, verificamos si ya existe uno con el mismo email (insensible a mayúsculas). Si hay duplicado, respondemos con <code>409 Conflict</code> — el código HTTP correcto para este caso, distinto del <code>400 Bad Request</code> que indica datos malformados.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header code-header-purple">🔷 Cambio en POST /api/contacts</div>
+        <pre><code class="language-javascript">app.post('/api/contacts', (req, res) => {
+  const { name, email, phone } = req.body;
+
+  const validation = validateContact({ name, email });
+  if (!validation.valid) {
+    return res.status(400).json({ error: validation.error });
+  }
+
+  // NUEVO: verificar duplicado (case-insensitive)
+  const duplicate = contacts.find(
+    c => c.email.toLowerCase() === email.toLowerCase()
+  );
+  if (duplicate) {
+    return res.status(409).json({ error: 'Ya existe un contacto con ese email.' });
+  }
+
+  const newContact = {
+    id: nextId++,
+    name: name.trim(),
+    email: email.toLowerCase(),
+    phone: phone?.trim() || null,
+    favorite: false,
+    createdAt: new Date().toISOString(),
+  };
+  contacts.push(newContact);
+  res.status(201).json(newContact);
+});</code></pre>
+      </div>
+
+      <div class="callout callout-tip" style="margin-top:0;">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>409 vs 400 — ¿por qué el código HTTP importa en los tests?</strong>
+          <p>Testear el código de status exacto (<code>expect(res.status).toBe(409)</code>) documenta un contrato del API. Si alguien cambia el 409 por un 400, el test falla y el equipo sabe que rompió la semántica HTTP — algo que un test de "solo verifica que falle" no detectaría.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MEJORA 3 ─── -->
+    <div class="upgrade-section" id="mejora-3">
+      <div class="upgrade-header">
+        <span class="upgrade-label">Mejora 3</span>
+        <span class="upgrade-title">Búsqueda y filtrado con query params</span>
+      </div>
+
+      <p style="color:#4c1d95; font-size:0.88rem; margin-bottom:1rem;">
+        El endpoint <code>GET /api/contacts</code> ahora acepta dos query params opcionales:
+        <code>?search=texto</code> filtra por nombre o email (case-insensitive), y
+        <code>?favorite=true</code> filtra solo los marcados como favorito.
+        Ambos se pueden combinar.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header code-header-purple">🔷 Cambio en GET /api/contacts</div>
+        <pre><code class="language-javascript">app.get('/api/contacts', (req, res) => {
+  const { search, favorite } = req.query;
+
+  let result = [...contacts];
+
+  // Filtro por texto (nombre o email)
+  if (search && search.trim() !== '') {
+    const q = search.trim().toLowerCase();
+    result = result.filter(
+      c => c.name.toLowerCase().includes(q) ||
+           c.email.toLowerCase().includes(q)
+    );
+  }
+
+  // Filtro por favoritos
+  if (favorite === 'true') {
+    result = result.filter(c => c.favorite === true);
+  }
+
+  res.json(result);
+});</code></pre>
+      </div>
+
+      <div class="callout callout-tip" style="margin-top:0;">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>Cuántos tests genera este cambio</strong>
+          <p>Al menos cinco: búsqueda con resultado, búsqueda sin resultado, búsqueda insensible a mayúsculas, filtro de favoritos, combinación de ambos filtros. Cada combinación de parámetros es un caso de uso distinto que puede romperse por separado.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MEJORA 4 ─── -->
+    <div class="upgrade-section" id="mejora-4">
+      <div class="upgrade-header">
+        <span class="upgrade-label">Mejora 4</span>
+        <span class="upgrade-title">Endpoint de favoritos — PATCH semántico</span>
+      </div>
+
+      <p style="color:#4c1d95; font-size:0.88rem; margin-bottom:1rem;">
+        En lugar de hacer un <code>PUT</code> con todo el objeto para cambiar solo el campo <code>favorite</code>, agregamos un endpoint dedicado <code>PATCH /api/contacts/:id/favorite</code> que lo alterna (toggle). Esto sigue el principio de <em>verbos HTTP correctos</em> y hace los tests más expresivos.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header code-header-purple">🔷 Nuevo endpoint PATCH /api/contacts/:id/favorite</div>
+        <pre><code class="language-javascript">// Toggle de favorito: si era false → true, si era true → false
+app.patch('/api/contacts/:id/favorite', (req, res) => {
+  const contact = contacts.find(c => c.id === Number(req.params.id));
+  if (!contact) {
+    return res.status(404).json({ error: 'Contacto no encontrado.' });
+  }
+  contact.favorite = !contact.favorite;
+  res.json(contact);
+});</code></pre>
+      </div>
+
+      <div class="callout callout-tip" style="margin-top:0;">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>Tests de comportamiento toggle</strong>
+          <p>Este endpoint requiere testear el <em>ciclo completo</em>: llamarlo una vez pone <code>favorite: true</code>, llamarlo de nuevo lo regresa a <code>false</code>. Un solo test no cubre ambas transiciones de estado.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MEJORA 5 ─── -->
+    <div class="upgrade-section" id="mejora-5">
+      <div class="upgrade-header">
+        <span class="upgrade-label">Mejora 5</span>
+        <span class="upgrade-title">Middleware de error centralizado y formato uniforme</span>
+      </div>
+
+      <p style="color:#4c1d95; font-size:0.88rem; margin-bottom:1rem;">
+        Agregamos un middleware de error al final de la app que captura errores no manejados y los devuelve en un formato JSON consistente. Además, todos los errores ahora incluyen un campo <code>status</code> en el body para facilitar el manejo en el cliente.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header code-header-purple">🔷 Middleware de error — al final de app.js</div>
+        <pre><code class="language-javascript">// Ruta no encontrada (404 genérico)
+app.use((req, res) => {
+  res.status(404).json({ status: 404, error: 'Ruta no encontrada.' });
+});
+
+// Manejador de errores inesperados
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ status: 500, error: 'Error interno del servidor.' });
+});
+
+module.exports = app;</code></pre>
+      </div>
+
+      <div class="callout callout-tip" style="margin-top:0;">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>Testear rutas inexistentes es valioso</strong>
+          <p>Un test que hace <code>GET /api/ruta-que-no-existe</code> y verifica <code>status 404</code> con un cuerpo JSON específico documenta que la API nunca devuelve HTML de error por defecto — un bug frecuente en Express cuando no hay middleware de error configurado.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── API COMPLETA ─────────────────── -->
+  <div class="section-divider"></div>
+
+  <section class="section" id="api-completa">
+    <h2 class="section-title toc-anchor">
+      <span class="badge badge-node">Node.js</span>
+      API extendida completa — <code>src/app.js</code>
+    </h2>
+
+    <p>Este es el código de producción de la API mejorada. Léelo con atención antes de escribir los tests — cada decisión tiene implicaciones en cómo se debe testear.</p>
+
+    <div class="code-block">
+      <div class="code-header code-header-node">📄 src/app.js — versión completa (Ejercicio 6)</div>
+      <pre><code class="language-javascript">const express = require('express');
+const app = express();
+app.use(express.json());
+
+// ── Validación de email con regex básica
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateContact({ name, email }) {
+  if (!name || name.trim() === '') {
+    return { valid: false, error: 'El campo name es requerido.' };
+  }
+  if (!email || !EMAIL_REGEX.test(email)) {
+    return { valid: false, error: 'El formato del email es inválido.' };
+  }
+  return { valid: true };
+}
+
+// ── Datos iniciales en memoria
+let contacts = [
+  { id: 1, name: 'Ana García',   email: 'ana@example.com',  phone: '555-0001', favorite: false, createdAt: '2024-01-10T08:00:00.000Z' },
+  { id: 2, name: 'Luis Pérez',   email: 'luis@example.com', phone: '555-0002', favorite: true,  createdAt: '2024-01-11T09:00:00.000Z' },
+  { id: 3, name: 'Eva Martínez', email: 'eva@example.com',  phone: null,       favorite: false, createdAt: '2024-01-12T10:00:00.000Z' },
+];
+let nextId = 4;
+
+// Permite a los tests reiniciar el estado
+function resetContacts() {
+  contacts = [
+    { id: 1, name: 'Ana García',   email: 'ana@example.com',  phone: '555-0001', favorite: false, createdAt: '2024-01-10T08:00:00.000Z' },
+    { id: 2, name: 'Luis Pérez',   email: 'luis@example.com', phone: '555-0002', favorite: true,  createdAt: '2024-01-11T09:00:00.000Z' },
+    { id: 3, name: 'Eva Martínez', email: 'eva@example.com',  phone: null,       favorite: false, createdAt: '2024-01-12T10:00:00.000Z' },
+  ];
+  nextId = 4;
+}
+
+// ── GET /api/contacts  (con búsqueda y filtro de favoritos)
+app.get('/api/contacts', (req, res) => {
+  const { search, favorite } = req.query;
+  let result = [...contacts];
+
+  if (search && search.trim() !== '') {
+    const q = search.trim().toLowerCase();
+    result = result.filter(
+      c => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+    );
+  }
+
+  if (favorite === 'true') {
+    result = result.filter(c => c.favorite === true);
+  }
+
+  res.json(result);
+});
+
+// ── GET /api/contacts/:id
+app.get('/api/contacts/:id', (req, res) => {
+  const contact = contacts.find(c => c.id === Number(req.params.id));
+  if (!contact) return res.status(404).json({ status: 404, error: 'Contacto no encontrado.' });
+  res.json(contact);
+});
+
+// ── POST /api/contacts
+app.post('/api/contacts', (req, res) => {
+  const { name, email, phone } = req.body;
+
+  const validation = validateContact({ name, email });
+  if (!validation.valid) {
+    return res.status(400).json({ status: 400, error: validation.error });
+  }
+
+  const duplicate = contacts.find(c => c.email.toLowerCase() === email.toLowerCase());
+  if (duplicate) {
+    return res.status(409).json({ status: 409, error: 'Ya existe un contacto con ese email.' });
+  }
+
+  const newContact = {
+    id: nextId++,
+    name: name.trim(),
+    email: email.toLowerCase(),
+    phone: phone?.trim() || null,
+    favorite: false,
+    createdAt: new Date().toISOString(),
+  };
+  contacts.push(newContact);
+  res.status(201).json(newContact);
+});
+
+// ── PUT /api/contacts/:id (actualización parcial)
+app.put('/api/contacts/:id', (req, res) => {
+  const contact = contacts.find(c => c.id === Number(req.params.id));
+  if (!contact) return res.status(404).json({ status: 404, error: 'Contacto no encontrado.' });
+
+  const { name, email, phone } = req.body;
+
+  if (email !== undefined) {
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ status: 400, error: 'El formato del email es inválido.' });
+    }
+    const duplicate = contacts.find(
+      c => c.id !== contact.id && c.email.toLowerCase() === email.toLowerCase()
+    );
+    if (duplicate) {
+      return res.status(409).json({ status: 409, error: 'Ya existe un contacto con ese email.' });
+    }
+    contact.email = email.toLowerCase();
+  }
+
+  if (name !== undefined) {
+    if (name.trim() === '') {
+      return res.status(400).json({ status: 400, error: 'El campo name no puede estar vacío.' });
+    }
+    contact.name = name.trim();
+  }
+
+  if (phone !== undefined) contact.phone = phone?.trim() || null;
+
+  res.json(contact);
+});
+
+// ── PATCH /api/contacts/:id/favorite (toggle)
+app.patch('/api/contacts/:id/favorite', (req, res) => {
+  const contact = contacts.find(c => c.id === Number(req.params.id));
+  if (!contact) return res.status(404).json({ status: 404, error: 'Contacto no encontrado.' });
+  contact.favorite = !contact.favorite;
+  res.json(contact);
+});
+
+// ── DELETE /api/contacts/:id
+app.delete('/api/contacts/:id', (req, res) => {
+  const index = contacts.findIndex(c => c.id === Number(req.params.id));
+  if (index === -1) return res.status(404).json({ status: 404, error: 'Contacto no encontrado.' });
+  contacts.splice(index, 1);
+  res.json({ message: 'Contacto eliminado.' });
+});
+
+// ── Ruta no encontrada
+app.use((req, res) => {
+  res.status(404).json({ status: 404, error: 'Ruta no encontrada.' });
+});
+
+// ── Error inesperado
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ status: 500, error: 'Error interno del servidor.' });
+});
+
+module.exports = { app, resetContacts };</code></pre>
+    </div>
+  </section>
+
+  <!-- ─────────────────── TABLA DE RUTAS ─────────────────── -->
+  <section class="section" id="resumen-rutas">
+    <h2 class="section-title toc-anchor">Tabla de rutas — API extendida</h2>
+
+    <table class="feature-table">
+      <thead>
+        <tr>
+          <th>Método</th>
+          <th>Ruta</th>
+          <th>Descripción</th>
+          <th>Respuestas posibles</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="method method-get">GET</span></td>
+          <td><code>/api/contacts</code></td>
+          <td>Lista todos los contactos. Soporta <code>?search=</code> y <code>?favorite=true</code></td>
+          <td>200 · array</td>
+          <td><span class="tag tag-mod">mejorado</span></td>
+        </tr>
+        <tr>
+          <td><span class="method method-get">GET</span></td>
+          <td><code>/api/contacts/:id</code></td>
+          <td>Contacto por ID</td>
+          <td>200 · 404</td>
+          <td><span class="tag tag-keep">igual</span></td>
+        </tr>
+        <tr>
+          <td><span class="method method-post">POST</span></td>
+          <td><code>/api/contacts</code></td>
+          <td>Crea contacto. Valida regex de email y detecta duplicados</td>
+          <td>201 · 400 · 409</td>
+          <td><span class="tag tag-mod">mejorado</span></td>
+        </tr>
+        <tr>
+          <td><span class="method method-put">PUT</span></td>
+          <td><code>/api/contacts/:id</code></td>
+          <td>Actualiza parcialmente. Valida email al actualizarlo</td>
+          <td>200 · 400 · 404 · 409</td>
+          <td><span class="tag tag-mod">mejorado</span></td>
+        </tr>
+        <tr>
+          <td><span class="method method-patch">PATCH</span></td>
+          <td><code>/api/contacts/:id/favorite</code></td>
+          <td>Alterna el campo <code>favorite</code> (toggle)</td>
+          <td>200 · 404</td>
+          <td><span class="tag tag-new">nuevo</span></td>
+        </tr>
+        <tr>
+          <td><span class="method method-delete">DELETE</span></td>
+          <td><code>/api/contacts/:id</code></td>
+          <td>Elimina contacto</td>
+          <td>200 · 404</td>
+          <td><span class="tag tag-keep">igual</span></td>
+        </tr>
+        <tr>
+          <td><span class="method method-get">*</span></td>
+          <td><code>/ruta-inexistente</code></td>
+          <td>Middleware 404 genérico — respuesta JSON</td>
+          <td>404 JSON</td>
+          <td><span class="tag tag-new">nuevo</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════ EJERCICIO ═══════════════════ -->
+  <div class="section-divider"></div>
+
+  <section class="section" id="ejercicio-tests">
+    <h2 class="section-title toc-anchor">
+      <span class="badge badge-purple">Ejercicio</span>
+      Tu turno — Escribe los tests para la API extendida
+      <span class="diff diff-hard">Avanzado</span>
+    </h2>
+
+    <p>Tienes el código de producción (<code>src/app.js</code> arriba). Tu tarea es escribir los tests en <code>__tests__/app.test.js</code> que cubran todas las funcionalidades nuevas y mejoradas.</p>
+
+    <div class="callout callout-warning">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Nota importante sobre el import</strong>
+        <p>La app ahora exporta un objeto: <code>module.exports = &#123; app, resetContacts &#125;;</code>. Actualiza tu import: <code>const &#123; app, resetContacts &#125; = require('../src/app');</code> y llama <code>resetContacts()</code> en el <code>beforeEach</code>.</p>
+      </div>
+    </div>
+
+    <!-- TASK A: Validación mejorada -->
+    <div class="exercise-section">
+      <div class="exercise-header">
+        <span class="exercise-icon">✏️</span>
+        <div>
+          <div class="exercise-title">Bloque A — Tests de validación con regex de email</div>
+          <div class="exercise-subtitle">Nuevos casos de borde que la validación con includes('@') no cubría</div>
+        </div>
+      </div>
+
+      <div class="exercise-body">
+        <p>El cambio de <code>includes('@')</code> a regex abre nuevos casos que antes pasaban sin error y ahora deben ser rechazados.</p>
+
+        <div class="exercise-task">
+          <h5>Tests requeridos — POST /api/contacts (validación)</h5>
+          <ol>
+            <li>Devuelve <strong>400</strong> cuando el email es <code>"@"</code> (sin usuario ni dominio).</li>
+            <li>Devuelve <strong>400</strong> cuando el email es <code>"usuario@"</code> (sin dominio).</li>
+            <li>Devuelve <strong>400</strong> cuando el email es <code>"@dominio.com"</code> (sin usuario).</li>
+            <li>Devuelve <strong>400</strong> cuando el email es <code>"sin-arroba"</code>.</li>
+            <li>Devuelve <strong>201</strong> cuando el email tiene formato válido <code>"usuario@dominio.com"</code>.</li>
+            <li>El mensaje de error contiene la palabra <code>"email"</code> (verifica con <code>toMatch(/email/i)</code>).</li>
+          </ol>
+        </div>
+
+        <button class="hint-toggle" onclick="toggleHint('hintA')">Ver pistas</button>
+        <div class="hint-body" id="hintA">
+          <ul>
+            <li>Usa <code>request(app).post('/api/contacts').send({ name: 'Test', email: '@' })</code> para cada caso.</li>
+            <li>Agrupa estos tests dentro de un <code>describe('validación de email', ...)</code> para mantener el archivo organizado.</li>
+            <li>No hace falta testear todos los posibles emails inválidos — solo los que representan caminos distintos en la regex (sin usuario, sin dominio, sin punto, sin arroba).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK B: Duplicados -->
+    <div class="exercise-section">
+      <div class="exercise-header">
+        <span class="exercise-icon">✏️</span>
+        <div>
+          <div class="exercise-title">Bloque B — Tests de detección de email duplicado</div>
+          <div class="exercise-subtitle">Verifica el comportamiento del 409 y la insensibilidad a mayúsculas</div>
+        </div>
+      </div>
+
+      <div class="exercise-body">
+        <p>Recuerda que el 409 es semánticamente distinto al 400. Tus tests deben verificar el código exacto, no solo que "haya un error".</p>
+
+        <div class="exercise-task">
+          <h5>Tests requeridos</h5>
+          <ol>
+            <li>Crear un contacto con un email ya existente devuelve <strong>409</strong>.</li>
+            <li>El body del 409 tiene el campo <code>error</code> con un mensaje descriptivo.</li>
+            <li>Crear con email en mayúsculas (<code>"ANA@EXAMPLE.COM"</code>) cuando ya existe <code>"ana@example.com"</code> también devuelve <strong>409</strong> (deduplicación case-insensitive).</li>
+            <li>Después de recibir un 409, el número total de contactos no aumentó (el POST fue un no-op).</li>
+          </ol>
+        </div>
+
+        <div class="callout callout-tip" style="margin-top:0.5rem;">
+          <span class="callout-icon">🔍</span>
+          <div class="callout-body">
+            <strong>Test 4: verificar que no se creó el contacto</strong>
+            <p>Haz el POST duplicado y luego un <code>GET /api/contacts</code> para contar cuántos hay. Si el <code>resetContacts()</code> en <code>beforeEach</code> funciona bien, siempre deberías partir de 3 contactos.</p>
+          </div>
+        </div>
+
+        <button class="hint-toggle" onclick="toggleHint('hintB')">Ver pistas</button>
+        <div class="hint-body" id="hintB">
+          <ul>
+            <li>El email <code>"ana@example.com"</code> ya existe en los datos iniciales. Úsalo para el test de duplicado.</li>
+            <li>Para el test 4: <code>const listRes = await request(app).get('/api/contacts');</code> y luego <code>expect(listRes.body).toHaveLength(3);</code>.</li>
+            <li>El test de case-insensitive es importante porque muchos sistemas guardan los emails normalizados a minúsculas pero los usuarios escriben con mayúsculas.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK C: Búsqueda -->
+    <div class="exercise-section">
+      <div class="exercise-header">
+        <span class="exercise-icon">✏️</span>
+        <div>
+          <div class="exercise-title">Bloque C — Tests de búsqueda y filtros en GET /api/contacts</div>
+          <div class="exercise-subtitle">Query params: ?search= y ?favorite=true, incluyendo combinaciones</div>
+        </div>
+      </div>
+
+      <div class="exercise-body">
+        <p>Los query params son invisibles para el código si no se testean explícitamente. Un refactor que rompa el filtrado pasaría desapercibido sin estos tests.</p>
+
+        <div class="exercise-task">
+          <h5>Tests requeridos</h5>
+          <ol>
+            <li><code>?search=ana</code> devuelve solo contactos cuyo nombre o email contiene "ana".</li>
+            <li><code>?search=ANA</code> (mayúsculas) devuelve los mismos resultados (case-insensitive).</li>
+            <li><code>?search=example</code> filtra por email y devuelve todos los que tienen "@example.com".</li>
+            <li><code>?search=xyznoexiste</code> devuelve un array vacío (no un 404).</li>
+            <li><code>?favorite=true</code> devuelve solo contactos con <code>favorite: true</code>.</li>
+            <li><code>?favorite=true</code> devuelve un array vacío si ninguno es favorito (tras <code>resetContacts</code>, solo Luis es favorito).</li>
+            <li>Sin query params devuelve todos los contactos (comportamiento original sin regresión).</li>
+          </ol>
+        </div>
+
+        <button class="hint-toggle" onclick="toggleHint('hintC')">Ver pistas</button>
+        <div class="hint-body" id="hintC">
+          <ul>
+            <li>Para pasar query params con Supertest: <code>request(app).get('/api/contacts').query({ search: 'ana' })</code> o directamente en la URL: <code>request(app).get('/api/contacts?search=ana')</code>.</li>
+            <li>Recuerda que con los datos iniciales, solo Luis tiene <code>favorite: true</code>. Planea tus asserts en consecuencia.</li>
+            <li>El test 4 (sin resultados) es importante para documentar que la API devuelve <code>[]</code> y no un <code>404</code>.</li>
+            <li>Para verificar que todos los resultados tienen <code>favorite: true</code>: <code>expect(res.body.every(c => c.favorite)).toBe(true)</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK D: Favoritos -->
+    <div class="exercise-section">
+      <div class="exercise-header">
+        <span class="exercise-icon">✏️</span>
+        <div>
+          <div class="exercise-title">Bloque D — Tests del toggle de favorito (PATCH)</div>
+          <div class="exercise-subtitle">Comportamiento de transición de estado: false→true→false</div>
+        </div>
+      </div>
+
+      <div class="exercise-body">
+        <p>Un endpoint de toggle tiene una propiedad especial: su resultado depende del estado previo. Necesitas testear ambas transiciones y también el caso de ID inexistente.</p>
+
+        <div class="exercise-task">
+          <h5>Tests requeridos</h5>
+          <ol>
+            <li>Llamar <code>PATCH /api/contacts/1/favorite</code> en Ana (que tiene <code>favorite: false</code>) devuelve el contacto con <code>favorite: true</code>.</li>
+            <li>Llamarlo dos veces sobre el mismo contacto regresa a <code>favorite: false</code> (toggle completo).</li>
+            <li>Llamarlo en Luis (que inicia con <code>favorite: true</code>) devuelve el contacto con <code>favorite: false</code>.</li>
+            <li>Devuelve <strong>404</strong> para un ID inexistente.</li>
+            <li>Después del toggle, un <code>GET /api/contacts/:id</code> refleja el cambio persistido (no es solo en el response del PATCH).</li>
+          </ol>
+        </div>
+
+        <div class="callout callout-tip" style="margin-top:0.5rem;">
+          <span class="callout-icon">🔍</span>
+          <div class="callout-body">
+            <strong>Test 5 — verificar persistencia del cambio</strong>
+            <p>Este test verifica que el PATCH realmente modificó el array en memoria, no solo devolvió un valor calculado. Haz el PATCH y luego un GET independiente sobre el mismo ID para confirmar que el estado cambió.</p>
+          </div>
+        </div>
+
+        <button class="hint-toggle" onclick="toggleHint('hintD')">Ver pistas</button>
+        <div class="hint-body" id="hintD">
+          <ul>
+            <li>Para el test del doble toggle: llama PATCH dos veces seguidas y verifica el estado final con un GET.</li>
+            <li>Usa los datos de seed conocidos: Ana (id=1) inicia en <code>false</code>, Luis (id=2) inicia en <code>true</code>.</li>
+            <li>La URL es <code>PATCH /api/contacts/1/favorite</code> — Supertest: <code>request(app).patch('/api/contacts/1/favorite')</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK E: PUT mejorado -->
+    <div class="exercise-section">
+      <div class="exercise-header">
+        <span class="exercise-icon">✏️</span>
+        <div>
+          <div class="exercise-title">Bloque E — Tests del PUT mejorado</div>
+          <div class="exercise-subtitle">Validación de email al actualizar y deduplicación en edición</div>
+        </div>
+      </div>
+
+      <div class="exercise-body">
+        <p>El PUT ahora valida el nuevo email y detecta duplicados. Esto añade más rutas de error que no existían antes.</p>
+
+        <div class="exercise-task">
+          <h5>Tests requeridos</h5>
+          <ol>
+            <li>Actualizar solo el <code>name</code> devuelve 200 y el contacto con el nombre cambiado.</li>
+            <li>Intentar actualizar con un <code>email</code> de formato inválido devuelve <strong>400</strong>.</li>
+            <li>Intentar actualizar con el <code>email</code> de otro contacto existente devuelve <strong>409</strong>.</li>
+            <li>Actualizar el email con el mismo email del contacto actual (sin cambio real) devuelve <strong>200</strong> — no debe ser un 409 porque no es un duplicado externo.</li>
+            <li>Actualizar un ID inexistente devuelve <strong>404</strong>.</li>
+          </ol>
+        </div>
+
+        <button class="hint-toggle" onclick="toggleHint('hintE')">Ver pistas</button>
+        <div class="hint-body" id="hintE">
+          <ul>
+            <li>Para el test 3 (duplicado en update): intenta cambiar el email de Ana (<code>id=1</code>) al email de Luis (<code>"luis@example.com"</code>).</li>
+            <li>Para el test 4 (mismo email): actualiza Ana con <code>{ email: "ana@example.com" }</code> — debería ser 200 porque el código excluye el propio contacto en la búsqueda de duplicados (<code>c.id !== contact.id</code>).</li>
+            <li>Estos tests documentan la diferencia entre "email ya usado por otro" (409) vs "mismo email que ya tengo" (200).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK F: Error handling -->
+    <div class="exercise-section">
+      <div class="exercise-header">
+        <span class="exercise-icon">✏️</span>
+        <div>
+          <div class="exercise-title">Bloque F — Tests del middleware de error</div>
+          <div class="exercise-subtitle">Rutas inexistentes y formato uniforme de respuestas de error</div>
+        </div>
+      </div>
+
+      <div class="exercise-body">
+        <p>El middleware de error es "invisible" en el código feliz. Sin tests explícitos, nadie notaría si se rompe o si una nueva ruta devuelve HTML en lugar de JSON.</p>
+
+        <div class="exercise-task">
+          <h5>Tests requeridos</h5>
+          <ol>
+            <li>Hacer <code>GET /api/ruta-que-no-existe</code> devuelve <strong>404</strong> con <code>Content-Type: application/json</code>.</li>
+            <li>La respuesta del 404 genérico tiene el campo <code>error</code> en el body (no HTML).</li>
+            <li>Todos los errores de negocio (400, 404, 409) tienen un campo <code>status</code> con el número de código HTTP correspondiente.</li>
+          </ol>
+        </div>
+
+        <div class="callout callout-tip" style="margin-top:0.5rem;">
+          <span class="callout-icon">🔍</span>
+          <div class="callout-body">
+            <strong>¿Por qué testear el Content-Type?</strong>
+            <p>Si Express no tiene un middleware de error configurado, devuelve HTML por defecto en rutas inexistentes. Un cliente que espera JSON rompería silenciosamente al intentar parsear HTML. Verificar <code>res.headers['content-type']</code> o usar <code>.expect('Content-Type', /json/)</code> de Supertest detecta este bug.</p>
+          </div>
+        </div>
+
+        <button class="hint-toggle" onclick="toggleHint('hintF')">Ver pistas</button>
+        <div class="hint-body" id="hintF">
+          <ul>
+            <li>Supertest tiene un shorthand: <code>request(app).get('/no-existe').expect('Content-Type', /json/)</code>.</li>
+            <li>Para verificar el campo <code>status</code> en errores: haz un <code>GET /api/contacts/9999</code> (404) y verifica que <code>res.body.status</code> sea <code>404</code>.</li>
+            <li>Para el test 3, puedes reutilizar la estructura de tests existentes y agregar <code>expect(res.body).toHaveProperty('status', 404)</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── POR QUÉ IMPORTAN ─────────────────── -->
+  <div class="section-divider"></div>
+
+  <section class="section" id="por-que-tests">
+    <h2 class="section-title toc-anchor">Por qué importan estos tests — explicación extendida</h2>
+
+    <p>Cada bloque de tests que escribiste en este ejercicio cubre un tipo distinto de riesgo. Aquí se explica qué bug detectaría cada uno si el código de producción tuviera un error.</p>
+
+    <!-- Tabla de importancia -->
+    <table class="feature-table">
+      <thead>
+        <tr>
+          <th>Bloque</th>
+          <th>¿Qué bug detecta?</th>
+          <th>Sin el test, el bug se manifestaría en...</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-test">A · Validación regex</span></td>
+          <td>Emails malformados que pasan la validación y entran a la BD</td>
+          <td>Producción, cuando un usuario escribe <code>usuario@</code> y el sistema lo acepta como válido</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-test">B · Duplicados (409)</span></td>
+          <td>Dos contactos con el mismo email, búsquedas ambiguas, confusión de identidad</td>
+          <td>Cuando el soporte intente buscar "el único" cliente con ese email y encuentre dos</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-test">C · Búsqueda</span></td>
+          <td>Filtros que devuelven todos los contactos cuando deberían filtrar, o que no son case-insensitive</td>
+          <td>Un usuario busca "ANA" y no encuentra a "Ana" — parece un bug de UI pero es del API</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-test">D · Toggle favorito</span></td>
+          <td>El toggle que no persiste, o que siempre pone <code>true</code> sin importar el estado previo</td>
+          <td>El usuario marca y desmarca un favorito y parece funcionar, pero al recargar la página sigue marcado</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-test">E · PUT mejorado</span></td>
+          <td>Un update de email que bypasea la validación, o que rechaza el propio email del contacto como "duplicado"</td>
+          <td>Un usuario intenta actualizar su nombre y el sistema le dice que su email "ya existe" (falso positivo)</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-test">F · Middleware de error</span></td>
+          <td>Rutas inexistentes que devuelven HTML; clientes que crashean al hacer <code>JSON.parse</code> de HTML</td>
+          <td>Una app móvil que consume el API y crashea en producción con "SyntaxError: Unexpected token &lt;"</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Cards de principios -->
+    <div class="why-section" style="margin-top:2rem;">
+      <div class="why-header">
+        <span class="why-label">Principio fundamental</span>
+        <span class="why-title">Los tests no son un lujo — son el contrato del sistema</span>
+      </div>
+      <p style="color:#7f1d1d; font-size:0.88rem; margin-bottom:0.6rem;">
+        Cuando alguien lee <code>it('rechaza emails duplicados con 409')</code> en el archivo de tests, aprende tres cosas sin leer el código de producción: (1) el sistema verifica duplicados, (2) el código de respuesta es 409 y no 400, (3) esta es una invariante que debe mantenerse al refactorizar.
+      </p>
+      <p style="color:#7f1d1d; font-size:0.88rem; margin:0;">
+        Un sistema sin tests es un sistema donde nadie puede refactorizar con confianza. Cada mejora de código se convierte en una apuesta arriesgada.
+      </p>
+    </div>
+
+    <div class="concept-grid" style="margin-top:1.5rem;">
+      <div class="concept-card">
+        <h4>Tests como documentación viva</h4>
+        <p>A diferencia de los comentarios (que se desactualizan), los tests fallan si el comportamiento cambia. Son documentación que se verifica automáticamente.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Regresiones detectadas antes</h4>
+        <p>Si agregas una nueva ruta y rompes el middleware de 404, el test F lo detecta antes de hacer deploy. Sin tests, lo descubres cuando los usuarios reportan errores.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Semántica HTTP correcta</h4>
+        <p>Testear 409 vs 400 parece obsesivo, pero los clientes del API toman decisiones basadas en el código HTTP. Un 400 y un 409 significan acciones distintas para el cliente.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Aislamiento de estado</h4>
+        <p><code>resetContacts()</code> en <code>beforeEach</code> garantiza que cada test sea independiente. Sin esto, el orden de ejecución de los tests afecta su resultado — un bug muy difícil de reproducir.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Cobertura de caminos</h4>
+        <p>La deduplicación case-insensitive, el mismo email en PUT, el toggle doble — son caminos de código que solo se ejecutan en situaciones específicas. Sin tests, llegarás a ellos en producción.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Confianza para iterar</h4>
+        <p>Con este conjunto de tests, puedes refactorizar el código de producción (cambiar la regex, la lógica de duplicados) y saber inmediatamente si rompiste algo.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-tip" style="margin-top:1.5rem;">
+      <span class="callout-icon">🚀</span>
+      <div class="callout-body">
+        <strong>Siguiente paso sugerido</strong>
+        <p>Una vez que tengas todos los tests pasando, intenta romper intencionalmente el código de producción (comenta la detección de duplicados, elimina la regex, borra el middleware de error) y verifica que <code>npx jest</code> detecta cada rotura. Eso te dará intuición sobre qué tan buena es tu cobertura.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  function toggleHint(id) {
+    const el = document.getElementById(id);
+    const btn = el.previousElementSibling;
+    if (el.style.display === 'block') {
+      el.style.display = 'none';
+      btn.textContent = 'Ver pistas';
+    } else {
+      el.style.display = 'block';
+      btn.textContent = 'Ocultar pistas';
+    }
+  }
+
+  // Active nav link on scroll
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('.toc-anchor');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-10% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
